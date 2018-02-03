@@ -1,0 +1,146 @@
+---
+title: "Negative explained variance in random forests"
+author: "Caspar van Lissa"
+date: 2018-01-29T15:44:14-05:00
+categories: ["R"]
+tags: ["metaforest", "explained variance", "bootstrapping"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+The random forests algorithm is known for being relatively robust to overfitting. The reason for this is that, in random forests, many (thousands) of tree-like models are grown on bootstrapped samples of the data. Tree-like models split the data repeatedly into groups, by the predictor variable and value that lead to the most homogenous post-split groups. Random forests further de-correlates the tree-type models by allowing each tree to choose only from a small sub-selection of predictors at each split. This way, each tree will fit some of the true patterns in the data, and some noise, that is unique to its bootstrap sample. When the predictions of all trees are averaged, the noise should balance out, and only true signal remains. Ideally.
+
+# When does random forests overfit?
+
+In practice, one situation lends itself to overfitting: If the dataset contains a large number of predictors that are uncorrelated to the outcome, the random forests algorithm will be forced to choose amongst only noise variables at many of its splits. This will lead to poor performance.
+
+Luckily, there is a way to tell whether your random forests analysis is fitting noise. The so-called $R^2_{oob}$ is an estimate of the proportion of variance your model might explain in new data. This statistic is estimated by predicting each case in the dataset, using all tree-like models in the forest that did not include that case in their bootstrap sample. In other words, using only the trees for which this specific case is "new data".
+
+A negative $R^2_{oob}$ is a clear warning sign that your model might be overfitting noise. But I have observed that this value can jump around quite a bit when running the same analysis repeatedly, especially when there is a lot of noise in the data.
+
+# Why is $R^2_{oob}$ jumping around?
+
+Random forests is, as the name implies, "random", in the sense that 1) bootstrap samples are randomly drawn, and 2) variables are randomly selected as candidates for each split in a tree. Thus, the function is dependent upon your computer's random number generator. If the estimates of $R^2_{oob}$ jump around, this suggests that these random numbers are having a substantial effect on your results. Yikes!
+
+# An example
+
+I will give an example, using my own <code>metaforest</code> R-package. This package uses weighted random forests to detect relevant moderators in meta-analysis (analyzing effect sizes from studies, where studies with more participants are assigned greater weights). The package contains a useful function to generate a simulated meta-analytic dataset, so let's do that now. We'll simulate a dataset of 40 cases, which is quite common for meta-analysis. We'll include 5 moderators, of which only **one** is related to the outcome (X1), as shown in the weighted scatterplot.
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+# Load packages
+library(metaforest)
+library(ggplot2)
+#Set random seed
+set.seed(4)
+#Simulate meta-analytic dataset
+data <- SimulateSMD(k_train = 40, k_test = 1000, moderators = 5, es = .2)
+data_train <- data$training
+#Show a weighted scatterplot of the relationship between X1 and yi, with smoothed line
+ggplot(data.frame(data_train, weight = 1/sqrt(data_train$vi)), 
+       aes(x = X1, y = yi, weight = weight, size = (0.5 + (weight - min(weight))/(max(weight) - min(weight))))) +
+  geom_point(alpha = .4) +
+  stat_smooth(color="darkblue", linetype = 2) +
+  theme_bw() + 
+  theme(legend.position = "none")
+```
+
+# MetaForest analysis
+
+Next, we'll conduct a random-effects weighted MetaForest analysis, with 1000 trees in the forest. Again, we will set a random seed so the analysis is replicable. We will plot the cumulative mean squared prediction error of the forest, to assess whether the model has converged. 
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+#Set random seed
+set.seed(30)
+#Run metaforest analysis
+mf.positive <- MetaForest(yi~., num.trees = 1000, data = data_train)
+#Check convergence
+plot(mf.positive)
+#Print summary of the analysis
+mf.positive
+
+```
+
+It looks like the model has converged, because the cumulative MSE converges to a stable line. The $R^2_{oob}$ for the model is positive, `r round(mf.positive$forest$r.squared, 2)`. This all looks reasonably good. Let's examine a variable importance plot to see whether the analysis managed to identify X1 as the relevant predictor.
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+#Plot variable importance
+VarImpPlot(mf.positive)
+```
+
+# A negative R2
+
+Variable X1 clearly stands out in the variable importance plot above, so it appears that the analysis was successful. But what happens when we set a different random seed, and repeat the entire process?
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+#Set random seed
+
+set.seed(157)
+mf.negative <- MetaForest(yi~., num.trees = 1000, data = data_train)
+#Check convergence
+plot(mf.negative)
+#Print summary of the analysis
+mf.negative
+#Plot variable importance
+VarImpPlot(mf.negative)
+```
+
+Again, the convergence plot looks acceptable, and even the variable importance plot seems to pick out X1 as the most important variable. But the $R^2_{oob}$ for is now negative, suggesting that the model is performing poorly, `r round(mf.positive$forest$r.squared, 2)`.
+
+# Replicating the analysis
+
+The fact that, depending on the random seed selected, the $R^2_{oob}$ of the model jumps from positive to negative does not inspire confidence in the results. What might help is to replicate the analysis 100 times, and examine the distribution of $R^2_{oob}$ across replications. That way, we can see whether the negative $R^2_{oob}$ is a fluke, or whether we get many negative values.
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+#Set random seed
+set.seed(11)
+#Replicate the metaforest analysis 100 times, and store only the r squared and variable importance metrics
+mf.replications <- replicate(100, {
+  mf_tmp <- MetaForest(yi~., num.trees = 1000, data = data_train)
+  list(r.squared = mf_tmp$forest$r.squared, varimp = mf_tmp$forest$variable.importance)
+  }, simplify = FALSE)
+# Make a data.frame with r squared values
+rsquared <- data.frame(r.squared = sapply(mf.replications, function(x){x[["r.squared"]]}))
+#Plot the kernel density of the r squared values
+ggplot(rsquared, aes(r.squared)) + 
+  geom_density() +
+  theme_bw()
+```
+
+We see that the brunt of the distribution (`r round(length(which(rsquared$r.squared > 0))/100, 2)`%) is well above zero, which suggests that the negative value was a fluke, and the model has probably detected some reliable patterns in the data. The $R^2_{oob}$ is low, however, $M = `r round(mean(rsquared[["r.squared"]]), 2)`, SD =  `r round(sd(rsquared[["r.squared"]]), 2)`$, which suggests that the model explains only a little bit of the variance in the outcome.
+
+With a bit of extra effort, we can also make a variable importance plot that shows the distribution of importance values across the 100 replications. For this plot, I've adapted the code inside the <code>VarImpPlot</code> function:
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+#Create data.frame with variable importance data from the 100 replications
+var_importance <- unlist(lapply(mf.replications, function(x){x[["varimp"]]}))
+var_importance <- data.frame(Variable = ordered(names(var_importance), levels = c("X5", "X4", "X3", "X2", "X1")), Importance = var_importance)
+#Plot variable importance as rotated boxplots
+ggplot(var_importance, aes(x=Variable, y=Importance)) +
+  geom_boxplot(color="black", size=0.2) + 
+  theme_bw() + 
+  geom_hline(yintercept = 0, colour = "grey50", linetype = 1) +
+  theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(), axis.title.y = element_blank()) +
+  ylab("Variable Importance (Permutation importance)") + 
+  coord_flip()
+```
+
+We see that X1 is consistently picked out as the most important predictor. X2 also has consistently positive variable importance, but we know that the true model did not specify an effect of X2. The remaining variables are mostly correctly identified as noise (indicated by their negative variable importance).
+
+Now finally, let's see how well the model is able to explain variance in truely new data, generated from the same simulation: the validation R squared, $R^2_v$. The <code>SimulateSMD</code> function also returns a 1000-cases test set, which allows us to do just that. For illustration purposes, we'll use the mf.negative model, which had a *negative* estimate of $R^2_{oob}$,  to predict these new cases. 
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+#Get testing data
+data_test <- data$testing
+#Calculate R2 in the testing set
+SS.total <- sum((data_test$yi - mean(data_train$yi))^2)
+SS.residual <- sum((data_test$yi - predict(mf.negative, data = data_test)$predictions)^2)
+r.2	<- 1 - SS.residual / SS.total
+r.2
+```
+
+Perhaps surprisingly, the $R^2_v$ in new data (`r round(r.2, 2)`) is higher than the mean $R^2_{oob}$ estimate (`r round(mean(rsquared[["r.squared"]]), 2)`). However, this example indicates that examining the *distribution* of replicated $R^2_{oob}$s gives us increased confidence that the model is, indeed, fitting some reliable patterns in the data - whereas a single analysis with a negative value for $R^2_{oob}$ might have caused doubt. You can use the examples in this blog post to replicate some of your own MetaForest or random forests analyses, and visualize the results. In a future blog post, I will demonstrate an application of this replicated MetaForest technique in real meta-analyitic data, where the true model is *not* known, and some uncertainty will therefore remain.

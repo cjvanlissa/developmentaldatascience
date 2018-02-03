@@ -1,0 +1,25 @@
+---
+title: "Sandcastles: Model fit in SEM"
+author: "Caspar van Lissa"
+date: 2017-11-15T08:08:37
+categories: ["Story"]
+tags: ["SEM", "fit", "story"]
+link-citations: true
+csl: apa.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+Recently, I had a debate with a collaborator, who argued that good model fit in confirmatory factor analysis provides support for the theory underlying the questionnaire which is represented by the measurement model of the factor analysis. I disagreed with this point of view, for statistical and epistemological reasons. To explain the concept, I came up with the following metaphor.
+
+Imagine you're taking a leisurely stroll on the beach. Your feet sink into the sand with every step, the waves are lapping at the beach, and the reeds in the dunes are rustling in a gentle breeze. Then, unexpectedly, you come upon a magnificent sandcastle. Five turrets stand tall,  decorated with seashells, connected by walls, and surrounded by a large moat. Can you imagine it? Good. Now, you tell me a story about how the sandcastle got there.
+
+Maybe you'll tell me about a little boy, who built the five turrets because his favorite number is five. Or maybe you'll tell me about mermaids who came out at night to build this castle, playing at being human. Whatever story you tell me, that is the *model* you are fitting. The sandcastle is the *data*. *Model fit* will tell you how closely your data story describes the observed data. So a story about an ambitious architect building mock-ups on the beach with a blueprint in hand will probably describe the sandcastle much more accurately than a story about three drunken tourists mucking around.
+
+The tricky thing is model fit can never tell you which of these stories is **true**. If model fit for a particular data story is very poor, that might lead you to doubt, or reject, the story. But a good model fit just means that this story is *one* plausible explanation; there might be reasonable alternative accounts.
+
+Another thing this metafor exposes is the nonsense of coming up with the model (data story) after having seen the data (sandcastle). For example, my data story about mermaids might perfectly explain the observed sandcastle, but it's probably not true, unless you believe in mermaids. It is only convincing if you came up with the story **first**, before seeing the data, and then show good model fit. 
+
+A model is a story about how data gets generated. If you can make that story explicit, and then collect data that lines up with the story, your story might hold up better than a sandcastle.

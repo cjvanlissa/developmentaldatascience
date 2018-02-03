@@ -1,0 +1,23 @@
+---
+title: "Meta-analysis using random forests, made easy"
+author: "Caspar van Lissa"
+date: 2017-12-03T23:09:56
+categories: ["R"]
+tags: ["meta-analysis", "random forests", "shiny"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+Meta-analyses have a reputation of being the highest standard of evidence for a scientific finding. However, especially in the social sciences, studies combined in meta-analyses often differ substantially from one another. This is problematic, because classic approaches to meta-analysis assume that either 1) all studies share a common true effect, or 2) that the true effect follows an underlying (normal) distribution, or 3) that any moderators which influence the underlying true effect are known and controlled for. When these assumptions are not met, studies should not be meta-analyzed. 
+
+Nevertheless, it is common practice to combine studies conducted in different labs, with different instruments, and different populations. These factors might all moderate the true effect size, but even when they are measured, samples are often too small to have the power to identify relevant moderators. The risk is that meta-regression analyses with small samples and many moderators will end up describing noise in the data, rather than true effects. This phenomenon is called "overfitting". Overfit models can grossly misrepresent the importance of different moderators. What is thus required, is a technique with substantial power to identify which moderators explain heterogeneity in a meta-analysis.
+
+To address this need, I developed MetaForest, which uses random forests to identify which moderators are most influential in explaining heterogeneity. Random forests have substantial flexibility to model non-linear effects and interactions between moderators, and are also quite robust to overfitting thanks to the dilligent application of bootstrap aggregation.
+
+MetaForest is freely available as an R-package (\texttt{metaforest}), with user-friendly functions for those already familiar with R. For those meta-analysts who would like to make use of MetaForest without having to learn R, however, I have launched [developmentaldatascience.org/metaforest](MetaForest Online), a graphical interface for MetaForest.
+

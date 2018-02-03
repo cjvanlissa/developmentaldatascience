@@ -1,0 +1,109 @@
+---
+title: "Power analysis for logistic regression with interactions"
+author: "Caspar van Lissa"
+date: 2017-11-12T20:21:14-05:00
+categories: ["R"]
+tags: ["power", "logistic regression", "simulation"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+```
+
+I recently consulted on a study which aimed to examine whether people are better able to solve a logic puzzle, called the "Wason task" [see @cosmides2010adaptive], when it is framed in terms of a moral dilemma (experimental condition) than when it is framed in a neutral way (control condition). My collaborator wanted to explore whether individual differences in morality moderated performance on this Wason task. Perhaps people who score higher in morality would be better able to solve the logic puzzle when it was framed in terms of a moral dilemma? 
+
+We used logistic regression to analyze the data, and found support for the hypothesized effect of experimental condition, but not for the interaction with morality. After sumission, a Reviewer commented that, perhaps, the power of our study had been too low to detect such an interaction effect. I figured that the best way to address this comment would be to conduct a (post hoc) power analysis, and show that our study had enough power to detect a relatively small effect.
+
+I found that power analysis for logistic regression with an interaction between a dichotomous and continuous predictor was relatively complicated, and was not readily available in statistical software. I therefore programmed a simulation, and share the code in this blog post. Furthermore, the results of this simulation are on the odds ratio scale. Reviewers might be more persuaded by an effect size in a more well-known unit, such as Cohen's D. An interesting article by @chen2010big addresses precisely this issue, and I decided to use their formulas to calculate Cohen's D for the effect of the interaction, for a 1SD increase in the moderator.
+
+In logistic regression, a linear model is used to predict the logit: The logged odds, which are a function of the probability of success. 
+
+$$logit(p) = \ln(\frac{p}{1-p}) = b_0 + b_1X_1 + b_2X_2 \dots b_kX_k$$
+
+Because the logit is hard to interpret, I used two simple functions to convert from logit to probability, and vice versa:
+
+```{r}
+LogOdds_Prob <- function(x){
+  exp(x)/(1+exp(x))
+}
+Prob_LogOdds <- function(x){
+  log(x/(1-x))
+}
+```
+
+Next, I used these convenience functions to specify the beta's of the linear model. Because Wason tasks have been used for decades in similar research, it is quite well-established that about 25% of participants in the control condition typically get the task correct, and about 75% of participants in the experimental condition [@cosmides2010adaptive, p. 9009]. Thus, the intercept should correspond to a probability of 25%, and the effect of condition should be the difference between 25% and 75%.
+
+```{r}
+intercept <- Prob_LogOdds(.25)
+beta_cond <- Prob_LogOdds(.75) - Prob_LogOdds(.25)
+```
+
+We can now set up the parameters of our simulation. We will use the sample size of our experiment, 887. For each participant, we randomly draw a 0 (control) or 1 (experimental condition) from a Bernoulli distribution, with a probability of 5/7 of any participant being assigned to the experimental condition. We draw a random value from a standard normal distribution for each participants' score on the covariate.
+
+The only 'unknown' is the size of the interaction effect between condition and the covariate. We vary this effect size from 0 to 1. 
+
+```{r echo=TRUE}
+#Sample size
+nn <- 887
+#Proportion of participants assigned to the experimental condition
+p_exp <- 5/7
+#Range of betas
+beta_range <- seq(0, 1, .01)
+
+#Set random seed
+set.seed(42)
+results <- sapply(beta_range, function(beta_int){
+  #Run 1000 replications
+  tmp_results <- replicate(n = 1000, expr = {
+    #Randomly draw condition from Bernoulli distribution
+    cond = rbinom(nn, 1, p_exp) 
+    #Randomly draw covariate from standard Normal distribution
+    covariate = rnorm(nn) 
+    #Specify the linear model. If a main effect for the covariate is expected,
+    #replace the beta value of 0 with another value.
+    lp = intercept + beta_cond*cond + 0*covariate + beta_int*cond*covariate
+    #The link function for logistic regression
+    link_lp = exp(lp)/(1 + exp(lp)) 
+    #The outcome variable
+    y = (runif(nn) < link_lp) 
+    #Run a logistic regression
+    log.int = glm(y ~ cond*covariate, family=binomial)
+    #One-tailed test to see if the interaction is significant
+    summary(log.int)$coefficients[4,3] > 1.644854 
+  })
+  #Compute the power for each coefficient
+  sum(tmp_results)/length(tmp_results)
+})
+```
+
+Let's plot our power to detect an interaction effect as a function of the effect size (as odds ratio):
+
+```{r fig.width=7, fig.height=4, echo=TRUE}
+library(ggplot2)
+plotdat <- data.frame(odds_ratio = exp(beta_range), power = results)
+ggplot(plotdat, aes(x = odds_ratio, y = power))+
+  geom_path()+
+  geom_hline(yintercept = .8, linetype = 2)+
+  #Add a horizontal line at the point where power exceeds the conventional
+  #threshold of .8, and a label for this point
+  geom_vline(xintercept = exp(beta_range[which(diff(results > .8)!=0)]))+
+  annotate("text", x = 1.6, y = .75, label = round(exp(beta_range[which(diff(results > .8)!=0)]), 2))+
+  labs(x = "Effect size (odds ratio)", y = "Power")+
+  theme_bw()
+```
+
+So, the simulation suggests that we have power to detect an effect, on the odds ratio scale, of about `r round(exp(beta_range[which(diff(results > .8)!=0)]), 2)`. But our Reviewers asked for the effect size in a more commonly used metric. Using the method of @chen2010big, we thus computed Cohen's D for the increase in the probability of success when the covariate increases from its mean value to one standard deviation above the mean. Because the covariate is standardized, this is simply the difference between 0 and 1. Cohen's D is computed as the difference between the quantiles of the Z distribution corresponding to these two expected probabilities.
+
+```{r echo=TRUE}
+P_mean <- LogOdds_Prob(intercept + beta_cond)
+P_1sd <- LogOdds_Prob(intercept + beta_cond + beta_range[which(diff(results > .8)!=0)])
+cohens_d <- qnorm(P_1sd) - qnorm(P_mean)
+round(cohens_d, 2)
+```
+
+Thus, the simulation suggests that we have the power to detect an effect size for the interaction as small as `r round(exp(beta_range[which(diff(results > .8)!=0)]), 2)` on the odds ratio scale, which, based on Chen, Cohen, and Chen (2010), corresponds to a Cohen’s D of `r round(cohens_d, 2)`. This is close to the conventional threshold for a ‘small’ effect size of Cohen’s D = .20, and definitely below the threshold for a ‘medium’ effect size of .50.
+
+# References
