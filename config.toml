@@ -37,6 +37,8 @@ copyright = "This work is licensed under a Creative Commons Attribution-ShareAli
     social_twitter = "cjvanlissa"
     social_github = "cjvanlissa"
     social_email = "c.j.vanlissa@uu.nl"
+    social_rss = "RSS feed"
+    #<!--social_rss = "RSS feed"-->
 	
 [[menu.main]]        
     name = "R blogs"
