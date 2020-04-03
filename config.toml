@@ -6,15 +6,16 @@ theme = "Mainroad"
 disqusShortname = "developmentaldatascience" # Enable comments by entering your Disqus shortname
 googleAnalytics = "" # Enable Google Analytics by entering your tracking id
 copyright = "This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License."
+ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
 
 [Author]
-    name = "Caspar van Lissa"
+    name = "dr. Caspar van Lissa"
     bio = "Interdisciplinary social scientist and datascience dilletante."
     avatar = "img/caspar.png"
 
 
 [Params]
-    subtitle = "Caspar van Lissa" # Subtitle of your site
+    subtitle = "dr. Caspar van Lissa" # Subtitle of your site
     description = "Blog about science and syntax" # Description of your site
     opengraph = true
     readmore = false # Show "Read more" button in list if true

@@ -11,9 +11,9 @@ csl: apa.csl
 
 
 
-<p>I recently consulted on a study which aimed to examine whether people are better able to solve a logic puzzle, called the “Wason task” <span class="citation">(see Cosmides, Barrett, &amp; Tooby, <a href="#ref-cosmides2010adaptive">2010</a>)</span>, when it is framed in terms of a moral dilemma (experimental condition) than when it is framed in a neutral way (control condition). My collaborator wanted to explore whether individual differences in morality moderated performance on this Wason task. Perhaps people who score higher in morality would be better able to solve the logic puzzle when it was framed in terms of a moral dilemma?</p>
+<p>I recently consulted on a study which aimed to examine whether people are better able to solve a logic puzzle, called the “Wason task” <span class="citation">(see Cosmides, Barrett, &amp; Tooby, <a href="#ref-cosmides2010adaptive" role="doc-biblioref">2010</a>)</span>, when it is framed in terms of a moral dilemma (experimental condition) than when it is framed in a neutral way (control condition). My collaborator wanted to explore whether individual differences in morality moderated performance on this Wason task. Perhaps people who score higher in morality would be better able to solve the logic puzzle when it was framed in terms of a moral dilemma?</p>
 <p>We used logistic regression to analyze the data, and found support for the hypothesized effect of experimental condition, but not for the interaction with morality. After sumission, a Reviewer commented that, perhaps, the power of our study had been too low to detect such an interaction effect. I figured that the best way to address this comment would be to conduct a (post hoc) power analysis, and show that our study had enough power to detect a relatively small effect.</p>
-<p>I found that power analysis for logistic regression with an interaction between a dichotomous and continuous predictor was relatively complicated, and was not readily available in statistical software. I therefore programmed a simulation, and share the code in this blog post. Furthermore, the results of this simulation are on the odds ratio scale. Reviewers might be more persuaded by an effect size in a more well-known unit, such as Cohen’s D. An interesting article by <span class="citation">H. Chen, Cohen, &amp; Chen (<a href="#ref-chen2010big">2010</a>)</span> addresses precisely this issue, and I decided to use their formulas to calculate Cohen’s D for the effect of the interaction, for a 1SD increase in the moderator.</p>
+<p>I found that power analysis for logistic regression with an interaction between a dichotomous and continuous predictor was relatively complicated, and was not readily available in statistical software. I therefore programmed a simulation, and share the code in this blog post. Furthermore, the results of this simulation are on the odds ratio scale. Reviewers might be more persuaded by an effect size in a more well-known unit, such as Cohen’s D. An interesting article by <span class="citation">Chen, Cohen, &amp; Chen (<a href="#ref-chen2010big" role="doc-biblioref">2010</a>)</span> addresses precisely this issue, and I decided to use their formulas to calculate Cohen’s D for the effect of the interaction, for a 1SD increase in the moderator.</p>
 <p>In logistic regression, a linear model is used to predict the logit: The logged odds, which are a function of the probability of success.</p>
 <p><span class="math display">\[logit(p) = \ln(\frac{p}{1-p}) = b_0 + b_1X_1 + b_2X_2 \dots b_kX_k\]</span></p>
 <p>Because the logit is hard to interpret, I used two simple functions to convert from logit to probability, and vice versa:</p>
@@ -23,7 +23,7 @@ csl: apa.csl
 Prob_LogOdds &lt;- function(x){
   log(x/(1-x))
 }</code></pre>
-<p>Next, I used these convenience functions to specify the beta’s of the linear model. Because Wason tasks have been used for decades in similar research, it is quite well-established that about 25% of participants in the control condition typically get the task correct, and about 75% of participants in the experimental condition <span class="citation">(Cosmides et al., <a href="#ref-cosmides2010adaptive">2010</a>, p. 9009)</span>. Thus, the intercept should correspond to a probability of 25%, and the effect of condition should be the difference between 25% and 75%.</p>
+<p>Next, I used these convenience functions to specify the beta’s of the linear model. Because Wason tasks have been used for decades in similar research, it is quite well-established that about 25% of participants in the control condition typically get the task correct, and about 75% of participants in the experimental condition <span class="citation">(Cosmides et al., <a href="#ref-cosmides2010adaptive" role="doc-biblioref">2010</a>, p. 9009)</span>. Thus, the intercept should correspond to a probability of 25%, and the effect of condition should be the difference between 25% and 75%.</p>
 <pre class="r"><code>intercept &lt;- Prob_LogOdds(.25)
 beta_cond &lt;- Prob_LogOdds(.75) - Prob_LogOdds(.25)</code></pre>
 <p>We can now set up the parameters of our simulation. We will use the sample size of our experiment, 887. For each participant, we randomly draw a 0 (control) or 1 (experimental condition) from a Bernoulli distribution, with a probability of 5/7 of any participant being assigned to the experimental condition. We draw a random value from a standard normal distribution for each participants’ score on the covariate.</p>
@@ -37,7 +37,8 @@ beta_range &lt;- seq(0, 1, .01)
 
 #Set random seed
 set.seed(42)
-results &lt;- sapply(beta_range, function(beta_int){
+if(!file.exists(&quot;logistic_power.dat&quot;)){
+  results &lt;- sapply(beta_range, function(beta_int){
   #Run 1000 replications
   tmp_results &lt;- replicate(n = 1000, expr = {
     #Randomly draw condition from Bernoulli distribution
@@ -58,7 +59,11 @@ results &lt;- sapply(beta_range, function(beta_int){
   })
   #Compute the power for each coefficient
   sum(tmp_results)/length(tmp_results)
-})</code></pre>
+})
+  write.table(results, &quot;logistic_power.dat&quot;, row.names = FALSE, col.names = FALSE)
+} else {
+  results &lt;- read.table(&quot;logistic_power.dat&quot;)$V1
+}</code></pre>
 <p>Let’s plot our power to detect an interaction effect as a function of the effect size (as odds ratio):</p>
 <pre class="r"><code>library(ggplot2)
 plotdat &lt;- data.frame(odds_ratio = exp(beta_range), power = results)
@@ -72,7 +77,7 @@ ggplot(plotdat, aes(x = odds_ratio, y = power))+
   labs(x = &quot;Effect size (odds ratio)&quot;, y = &quot;Power&quot;)+
   theme_bw()</code></pre>
 <p><img src="/post/12-11-17_logistic_power_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>So, the simulation suggests that we have power to detect an effect, on the odds ratio scale, of about 1.55. But our Reviewers asked for the effect size in a more commonly used metric. Using the method of <span class="citation">H. Chen et al. (<a href="#ref-chen2010big">2010</a>)</span>, we thus computed Cohen’s D for the increase in the probability of success when the covariate increases from its mean value to one standard deviation above the mean. Because the covariate is standardized, this is simply the difference between 0 and 1. Cohen’s D is computed as the difference between the quantiles of the Z distribution corresponding to these two expected probabilities.</p>
+<p>So, the simulation suggests that we have power to detect an effect, on the odds ratio scale, of about 1.55. But our Reviewers asked for the effect size in a more commonly used metric. Using the method of <span class="citation">Chen et al. (<a href="#ref-chen2010big" role="doc-biblioref">2010</a>)</span>, we thus computed Cohen’s D for the increase in the probability of success when the covariate increases from its mean value to one standard deviation above the mean. Because the covariate is standardized, this is simply the difference between 0 and 1. Cohen’s D is computed as the difference between the quantiles of the Z distribution corresponding to these two expected probabilities.</p>
 <pre class="r"><code>P_mean &lt;- LogOdds_Prob(intercept + beta_cond)
 P_1sd &lt;- LogOdds_Prob(intercept + beta_cond + beta_range[which(diff(results &gt; .8)!=0)])
 cohens_d &lt;- qnorm(P_1sd) - qnorm(P_mean)

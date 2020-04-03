@@ -57,8 +57,8 @@ mf.positive
 ## Call:
 ## MetaForest(formula = yi ~ ., data = data_train, num.trees = 1000)
 ## 
-## R squared (OOB):                  0.0646 
-## Residual heterogeneity (tau2):    0.0516</code></pre>
+## R squared (OOB):                  0.0640 
+## Residual heterogeneity (tau2):    0.0517</code></pre>
 <p>It looks like the model has converged, because the cumulative MSE converges to a stable line. The <span class="math inline">\(R^2_{oob}\)</span> for the model is positive, 0.06. This all looks reasonably good. Let’s examine a variable importance plot to see whether the analysis managed to identify X1 as the relevant predictor.</p>
 <pre class="r"><code>#Plot variable importance
 VarImpPlot(mf.positive)</code></pre>
@@ -79,8 +79,8 @@ mf.negative
 ## Call:
 ## MetaForest(formula = yi ~ ., data = data_train, num.trees = 1000)
 ## 
-## R squared (OOB):                  -0.0155 
-## Residual heterogeneity (tau2):    0.0646
+## R squared (OOB):                  -0.0133 
+## Residual heterogeneity (tau2):    0.0642
 #Plot variable importance
 VarImpPlot(mf.negative)</code></pre>
 <p><img src="/post/29-01-18_metaforest_no_effect_files/figure-html/unnamed-chunk-4-2.png" width="672" /></p>
@@ -126,6 +126,6 @@ SS.total &lt;- sum((data_test$yi - mean(data_train$yi))^2)
 SS.residual &lt;- sum((data_test$yi - predict(mf.negative, data = data_test)$predictions)^2)
 r.2 &lt;- 1 - SS.residual / SS.total
 r.2
-## [1] 0.087</code></pre>
+## [1] 0.08752728</code></pre>
 <p>Perhaps surprisingly, the <span class="math inline">\(R^2_v\)</span> in new data (0.09) is higher than the mean <span class="math inline">\(R^2_{oob}\)</span> estimate (0.04). However, this example indicates that examining the <em>distribution</em> of replicated <span class="math inline">\(R^2_{oob}\)</span>s gives us increased confidence that the model is, indeed, fitting some reliable patterns in the data - whereas a single analysis with a negative value for <span class="math inline">\(R^2_{oob}\)</span> might have caused doubt. You can use the examples in this blog post to replicate some of your own MetaForest or random forests analyses, and visualize the results. In a future blog post, I will demonstrate an application of this replicated MetaForest technique in real meta-analyitic data, where the true model is <em>not</em> known, and some uncertainty will therefore remain.</p>
 </div>

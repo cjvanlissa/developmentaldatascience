@@ -55,7 +55,8 @@ beta_range <- seq(0, 1, .01)
 
 #Set random seed
 set.seed(42)
-results <- sapply(beta_range, function(beta_int){
+if(!file.exists("logistic_power.dat")){
+  results <- sapply(beta_range, function(beta_int){
   #Run 1000 replications
   tmp_results <- replicate(n = 1000, expr = {
     #Randomly draw condition from Bernoulli distribution
@@ -77,6 +78,11 @@ results <- sapply(beta_range, function(beta_int){
   #Compute the power for each coefficient
   sum(tmp_results)/length(tmp_results)
 })
+  write.table(results, "logistic_power.dat", row.names = FALSE, col.names = FALSE)
+} else {
+  results <- read.table("logistic_power.dat")$V1
+}
+
 ```
 
 Let's plot our power to detect an interaction effect as a function of the effect size (as odds ratio):

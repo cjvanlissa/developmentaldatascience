@@ -1,0 +1,26 @@
+---
+title: "Curating secondary data for COVID-19 research"
+author: "Caspar van Lissa"
+date: "2020-04-03"
+categories: ["R", "Open Science"]
+tags: ["open science", "git", "covid-19"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+
+
+<p>When the global COVID-19 pandemic was anounced, scientists and organizations worldwide responded swiftly by volunteering research time and data. Some are studying the spread of the disease, others are studying the implementation of policies, and again others are studying psychosocial factors, like the consequences of social distancing, or policy adherence. This crisis is a clear demonstration that Open Science practices <a href="https://www.scienceguide.nl/2020/04/dire-times-of-covid-19-stress-the-societal-importance-of-open-science/">can accellerate scientific progress</a>.</p>
+<p>Like many others, I volunteered research time, specifically to <a href="https://dataversuscorona.com/">Data scientists Against Corona</a>. Along with a small team, we set out to facilitate cross-national psychological research. The first outline of our plans was:</p>
+<ol style="list-style-type: decimal">
+<li>Identify ways in which countries differ from one another that might be relevant for psychosocial responses to the pandemic, and find relevant data sources.</li>
+<li>Homogenize the data sources, so that each can be linked to a country code.</li>
+<li>Use machine learning algorithms to perform variable selection and identify the main predictors for different outcomes.</li>
+</ol>
+<p>We first set out to address points 1 and 2. Needless to say, there are many potentially relevant factors. We started out with a solid foundation: A fully reproducible project template using the <a href="https://osf.io/zcvbs/">WORCS-workflow</a>. From there on, we set out to curate relevant data sources. For every data source, we wrote the steps required to access it and homogenize it as a function, so that automatic data queries could be performed daily to update the static files for analysis.</p>
+<p>Along the way, we realized that these data could prove valuable for many different research projects, both relevant to COVID-19 and not. Some projects might moreover lack the expertise required to extract the data in a usable format. Thus, we decided to share the data in an early stage, to invite both data users and contributors.</p>
+<p>The project is, as of yet, ongoing, but it is exciting to see how Open Science plays into every aspect of it, from conception to execution, collaboration, and deliverable output. Key insights provided by WORCS-contributor <a href="https://www.uu.nl/staff/BMIVreede">Barbara Vreede</a> - like adding a clear <code>README.md</code> file, a <code>license.md</code>, and linking the licenses of the data sources we use - make all the difference when you’re trying to create a repository that people can use (and are legally allowed to). Finally, working with a diverse team of data scientists is an excellent learning experience, as everyone brings their own expertise to the table.</p>
+<p>Here is the repository in its current form; if you are looking to use these data for research - go ahead, and do reach out if you need support in using it!</p>
+<iframe width="100%" height="500px" src="https://github.com/cjvanlissa/COVID19_metadata" frameborder="0">
+</iframe>

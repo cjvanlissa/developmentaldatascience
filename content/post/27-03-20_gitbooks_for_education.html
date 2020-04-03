@@ -1,0 +1,38 @@
+---
+title: "Using GitBooks to create Open course materials"
+author: "Caspar van Lissa"
+date: "2020-03-29"
+categories: ["R", "Open Science"]
+tags: ["open science", "git", "bookdown", "rmarkdown"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+
+
+<p>With the social restrictions put in place to combat the COVID-19 virus, many teachers are scrambling to transition their courses to online formats. One tool that can be very useful in this context, is the so-called <em>GitBook</em>. It is an oline “book” format, that can be hosted directly from a GitHub repository. I have some prior expertise benefiting from the advantages of using a GitBook, because I transitioned a course from proprietary software to R last year. <a href="https://cjvanlissa.github.io/gitbook-demo/">Here is a GitBook I made about how to make a GitBook for Open Educational Materials</a>.</p>
+<div id="why-use-a-gitbook-for-teaching" class="section level2">
+<h2>Why use a GitBook for teaching?</h2>
+<div id="to-spead-the-workload" class="section level3">
+<h3>To spead the workload</h3>
+<p>My challenge was that I had to translate all tutorial instructions from proprietary software to R, and there was not enough time to complete this task before the course commenced. By making the tutorial instructions available in <a href="https://cjvanlissa.github.io/TCSM/">this GitBook</a>, I was able to continue translating tutorial instructions <em>while the semester was ongoing</em>, and push updates to GitHub in time for each session, which were immediately available to all students. The parallel with the current situation is that some courses are now forced to start teaching in an online format, without having enough time to completely prepare. By using a GitBook, you can spread out the workload of preparing your materials across the semester. <a href="https://cjvanlissa.github.io/TCSM/">This is the finished GitBook</a></p>
+</div>
+<div id="to-contribute-or-use-existing-open-educational-materials" class="section level3">
+<h3>To contribute or use existing Open Educational Materials</h3>
+<p>Another key advantage of using a GitBook is, that you can easily make your course materials available for others to use under an open access license, or perhaps you can use an existing GitBook from the internet and adapt it for your own uses. GitBooks can be easily duplicated and adapted, just like any other project hosted on GitHub. Contributing Open Educational Materials can help reduce the workload on teachers around the world, and can improve the quality of the materials used thanks to online collaborating and feedback.</p>
+</div>
+<div id="to-benefit-from-formatting-advantages" class="section level3">
+<h3>To benefit from formatting advantages</h3>
+<p>GitBooks also have two formatting advantages over classic PDF or Word files. First, they are Rmarkdown files, and can thus include blocks of R (<a href="https://rstudio.github.io/reticulate/articles/r_markdown.html">or Python</a>) code that can be evaluated, and whose results are rendered to the file. Second, they are interactive web pages, and as such, can have dynamic features (such as answers to assignments that can be hidden, or boxes where students can fill out an answer to be checked). Additionally, other web pages or interactive apps can be embedded within the page. So whereas a traditional document is static, GitBooks can be interactive.</p>
+</div>
+</div>
+<div id="how-do-gitbooks-work" class="section level2">
+<h2>How do GitBooks work?</h2>
+<p>I will focus specifically on GitBooks that are made in <a href="www.rstudio.com">Rstudio</a>, using the <a href="https://rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf"><code>rmarkdown</code> markup language</a>, rendered using the <a href="https://bookdown.org/yihui/bookdown/get-started.html"><code>bookdown</code> package</a>, and hosted on <a href="https://github.com/">GitHub</a>. <a href="https://cjvanlissa.github.io/gitbook-demo/">Here is an example of such a book</a>.</p>
+<p>These GitBooks consist of an Rstudio project, with several Rmarkdown files containing the chapters of the book. Inside Rstudio, users can press a “Build Book” button, which renders all of these chapters to a nicely formatted HTML book (and a PDF file for users to download). Users can push the finished book to a GitHub repository, and indicate on GitHub that the book should be hosted on GitHub pages. Voilà!</p>
+</div>
+<div id="getting-started-yourself" class="section level2">
+<h2>Getting started yourself</h2>
+<p>If you are convinced that this tool might benefit your teaching, I have prepared some materials to get you started. <a href="https://cjvanlissa.github.io/gitbook-demo/">This is an educational GitBook about making an educational GitBook.</a>. I made it as course material for the first <a href="https://openscience-utrecht.com/oscoffee/">OSCoffee session</a>, next Friday April 3d. The OSCoffee sessions are brief educational sessions or discussions hosted by the <a href="https://openscience-utrecht.com">Open Science Community Utrecht</a> during the COVID-19 shutdown, to keep inspiring our support base throughout the Summer period!</p>
+</div>

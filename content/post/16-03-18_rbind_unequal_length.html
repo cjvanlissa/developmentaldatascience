@@ -1,0 +1,93 @@
+---
+title: "Combining rows of unequal length into a matrix or data.frame"
+author: "Caspar van Lissa"
+date: 2018-03-16T08:47:12-05:00
+categories: ["R"]
+tags: ["data wrangling", "rbind", "unequal length"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+
+
+<p>In preparation of Utrecht University’s <a href="https://www.utrechtsummerschool.nl/courses/social-sciences/advanced-course-on-using-mplus">Mplus summer school</a>, I am developing some R functions for running and plotting mixture models. Doing so requires a bit of data wrangling, because Mplus output is essentially plain text. Moreover, the formatting can differ between sections. One section consisted of rows of different lengths, because section headers were printed only once for a block of rows, instead of being repeated for each row. I came up with a fast solution to rbind rows of different lengths, and to repeat the section headers across lines. First, here is an example of the raw text output from Mplus:</p>
+<pre class="r"><code>mplus_output
+##  [1] &quot;FINAL CLASS COUNTS AND PROPORTIONS FOR EACH LATENT CLASS VARIABLE&quot;
+##  [2] &quot;BASED ON THE ESTIMATED MODEL&quot;                                     
+##  [3] &quot;&quot;                                                                 
+##  [4] &quot;  Latent Class&quot;                                                   
+##  [5] &quot;    Variable    Class&quot;                                            
+##  [6] &quot;&quot;                                                                 
+##  [7] &quot;    C1             1       525.87720          0.26294&quot;            
+##  [8] &quot;                   2       749.33826          0.37467&quot;            
+##  [9] &quot;                   3       724.78455          0.36239&quot;            
+## [10] &quot;    C2             1       391.52097          0.19576&quot;            
+## [11] &quot;                   2      1132.59033          0.56630&quot;            
+## [12] &quot;                   3       475.88873          0.23794&quot;            
+## [13] &quot;&quot;</code></pre>
+<p>When I try to parse this block into a matrix, the first row causes a bit of trouble, because the latent variable names (C1, C2) are printed only once, ostensibly for aesthetic reasons.</p>
+<pre class="r"><code># Select lines with numerical output for parsing
+numberLines &lt;- grep(&quot;^\\s*([a-zA-Z0-9]+)?(\\s+[0-9\\.-]{1,}){1,}$&quot;, mplus_output, perl=TRUE)
+# Split each numerical line into elements by whitespace
+parsedlines &lt;- strsplit(trimws(mplus_output[numberLines]), &quot;\\s+&quot;)
+# Try to rbind to rows into a matrix
+do.call(rbind, parsedlines)
+## Warning in (function (..., deparse.level = 1) : number of columns of result is
+## not a multiple of vector length (arg 2)
+##      [,1] [,2]         [,3]        [,4]     
+## [1,] &quot;C1&quot; &quot;1&quot;          &quot;525.87720&quot; &quot;0.26294&quot;
+## [2,] &quot;2&quot;  &quot;749.33826&quot;  &quot;0.37467&quot;   &quot;2&quot;      
+## [3,] &quot;3&quot;  &quot;724.78455&quot;  &quot;0.36239&quot;   &quot;3&quot;      
+## [4,] &quot;C2&quot; &quot;1&quot;          &quot;391.52097&quot; &quot;0.19576&quot;
+## [5,] &quot;2&quot;  &quot;1132.59033&quot; &quot;0.56630&quot;   &quot;2&quot;      
+## [6,] &quot;3&quot;  &quot;475.88873&quot;  &quot;0.23794&quot;   &quot;3&quot;</code></pre>
+<p>This yields an error, and a matrix with shifted values. Below is my code that addresses this problem. The steps are simple:</p>
+<ol style="list-style-type: decimal">
+<li>Count the length of each line</li>
+<li>Pad the shorter lines with s on the left side</li>
+<li>Rbind again</li>
+</ol>
+<pre class="r"><code># Count the length of each line
+line_lengths &lt;- sapply(parsedlines, length)
+# Pad shorter lines with NA on the left side
+parsedlines[which(line_lengths != max(line_lengths))] &lt;- 
+  lapply(parsedlines[which(line_lengths != max(line_lengths))], function(x){
+    c(NA, x)
+    })
+
+output &lt;- do.call(rbind, parsedlines)
+output
+##      [,1] [,2] [,3]         [,4]     
+## [1,] &quot;C1&quot; &quot;1&quot;  &quot;525.87720&quot;  &quot;0.26294&quot;
+## [2,] NA   &quot;2&quot;  &quot;749.33826&quot;  &quot;0.37467&quot;
+## [3,] NA   &quot;3&quot;  &quot;724.78455&quot;  &quot;0.36239&quot;
+## [4,] &quot;C2&quot; &quot;1&quot;  &quot;391.52097&quot;  &quot;0.19576&quot;
+## [5,] NA   &quot;2&quot;  &quot;1132.59033&quot; &quot;0.56630&quot;
+## [6,] NA   &quot;3&quot;  &quot;475.88873&quot;  &quot;0.23794&quot;</code></pre>
+<p>As we see, this yields a nice matrix. There is one remaining problem, namely that the latent variable names (C1, C2) are only printed once. I would like these values to be repeated for every row pertaining to that latent variable. My steps for this are as follows:</p>
+<ol style="list-style-type: decimal">
+<li>Figure out how many times each name should be repeated</li>
+<li>Repeat the name</li>
+</ol>
+<p>For this, I used a combination of , to identify the distance between successive non-missing entries of the first column, and , a function that expands a run-length encoded vector into a full vector.</p>
+<pre class="r"><code># How many repeats each?
+lengths &lt;- diff(c(which(!is.na(output[,1])), (nrow(output)+1)))
+# Confirm that each entry should be repeated 3 times
+lengths
+## [1] 3 3
+# Values to repeat are simply the non-missing values in the first column
+values = output[,1][complete.cases(output[,1])]
+values
+## [1] &quot;C1&quot; &quot;C2&quot;
+
+output[,1] &lt;- inverse.rle(list(lengths = lengths, values = values))
+output
+##      [,1] [,2] [,3]         [,4]     
+## [1,] &quot;C1&quot; &quot;1&quot;  &quot;525.87720&quot;  &quot;0.26294&quot;
+## [2,] &quot;C1&quot; &quot;2&quot;  &quot;749.33826&quot;  &quot;0.37467&quot;
+## [3,] &quot;C1&quot; &quot;3&quot;  &quot;724.78455&quot;  &quot;0.36239&quot;
+## [4,] &quot;C2&quot; &quot;1&quot;  &quot;391.52097&quot;  &quot;0.19576&quot;
+## [5,] &quot;C2&quot; &quot;2&quot;  &quot;1132.59033&quot; &quot;0.56630&quot;
+## [6,] &quot;C2&quot; &quot;3&quot;  &quot;475.88873&quot;  &quot;0.23794&quot;</code></pre>
+<p>One important advantage of this approach is that it’s quite fast, about 10x faster than other syntax I found on the internet, which only partially solved my problem (i.e., only combined vectors of unequal length into a matrix). This makes it especially suitable for inclusion in a parser that reads large blocks of free text into a tabular format. I hope this may be of some use to others!</p>

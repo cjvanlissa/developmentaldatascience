@@ -1,0 +1,85 @@
+---
+title: "Combining rows of unequal length into a matrix or data.frame"
+author: "Caspar van Lissa"
+date: 2018-03-16T08:47:12-05:00
+categories: ["R"]
+tags: ["data wrangling", "rbind", "unequal length"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE)
+mplus_output <- c("FINAL CLASS COUNTS AND PROPORTIONS FOR EACH LATENT CLASS VARIABLE",
+"BASED ON THE ESTIMATED MODEL",
+"",
+"  Latent Class",
+"    Variable    Class",
+"",
+"    C1             1       525.87720          0.26294",
+"                   2       749.33826          0.37467",
+"                   3       724.78455          0.36239",
+"    C2             1       391.52097          0.19576",
+"                   2      1132.59033          0.56630",
+"                   3       475.88873          0.23794",
+"")
+```
+
+In preparation of Utrecht University's [Mplus summer school](https://www.utrechtsummerschool.nl/courses/social-sciences/advanced-course-on-using-mplus), I am developing some R functions for running and plotting mixture models. Doing so requires a bit of data wrangling, because Mplus output is essentially plain text. Moreover, the formatting can differ between sections. One section consisted of rows of different lengths, because section headers were printed only once for a block of rows, instead of being repeated for each row. I came up with a fast solution to rbind rows of different lengths, and to repeat the section headers across lines. First, here is an example of the raw text output from Mplus:
+
+```{r echo=TRUE, message=FALSE}
+mplus_output
+```
+
+When I try to parse this block into a matrix, the first row causes a bit of trouble, because the latent variable names (C1, C2) are printed only once, ostensibly for aesthetic reasons.
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+# Select lines with numerical output for parsing
+numberLines <- grep("^\\s*([a-zA-Z0-9]+)?(\\s+[0-9\\.-]{1,}){1,}$", mplus_output, perl=TRUE)
+# Split each numerical line into elements by whitespace
+parsedlines <- strsplit(trimws(mplus_output[numberLines]), "\\s+")
+# Try to rbind to rows into a matrix
+do.call(rbind, parsedlines)
+```
+
+This yields an error, and a matrix with shifted values. Below is my code that addresses this problem. The steps are simple:
+
+1) Count the length of each line
+2) Pad the shorter lines with \code{NA}s on the left side
+3) Rbind again
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+# Count the length of each line
+line_lengths <- sapply(parsedlines, length)
+# Pad shorter lines with NA on the left side
+parsedlines[which(line_lengths != max(line_lengths))] <- 
+  lapply(parsedlines[which(line_lengths != max(line_lengths))], function(x){
+    c(NA, x)
+    })
+
+output <- do.call(rbind, parsedlines)
+output
+```
+
+As we see, this yields a nice matrix. There is one remaining problem, namely that the latent variable names (C1, C2) are only printed once. I would like these values to be repeated for every row pertaining to that latent variable. My steps for this are as follows:
+
+1. Figure out how many times each name should be repeated
+2. Repeat the name
+
+For this, I used a combination of \code{diff}, to identify the distance between successive non-missing entries of the first column, and \code{inverse.rle}, a function that expands a run-length encoded vector into a full vector.
+
+```{r echo=TRUE, message=FALSE, fig.width=7, fig.height=4}
+# How many repeats each?
+lengths <- diff(c(which(!is.na(output[,1])), (nrow(output)+1)))
+# Confirm that each entry should be repeated 3 times
+lengths
+# Values to repeat are simply the non-missing values in the first column
+values = output[,1][complete.cases(output[,1])]
+values
+
+output[,1] <- inverse.rle(list(lengths = lengths, values = values))
+output
+```
+
+One important advantage of this approach is that it's quite fast, about 10x faster than other syntax I found on the internet, which only partially solved my problem (i.e., only combined vectors of unequal length into a matrix). This makes it especially suitable for inclusion in a parser that reads large blocks of free text into a tabular format. I hope this may be of some use to others!
