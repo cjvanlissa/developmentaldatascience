@@ -5,7 +5,7 @@ description = "Mainroad is a responsive, clean and content-focused Hugo theme."
 homepage = "https://github.com/vimux/mainroad/"
 tags = ["blog", "responsive", "widgets", "rss", "disqus", "google analytics", "wordpress"]
 features = ["blog", "responsive", "widgets", "rss", "disqus", "wordpress"]
-min_version = 0.20
+min_version = "0.48"
 
 [author]
   name = "Vimux"
@@ -16,7 +16,7 @@ min_version = 0.20
   name = "MH Magazine lite"
   homepage = "https://wordpress.org/themes/mh-magazine-lite/"
   repo = "https://themes.trac.wordpress.org/browser/mh-magazine-lite/2.5.6"
-  
+
 [params.logo]
   url = "logo.png"
   width = 50
