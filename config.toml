@@ -23,7 +23,7 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     authorbox = true
     post_navigation = true
     postSections = ["post"]
-	  RSSSections = [ "posts"]
+	  RSSSections = [ "post"]
 
 	[params.logo]
 		logo_url = "developmentaldatascience.png"
@@ -46,9 +46,3 @@ ignoreFiles = ["\\.Rmd$", "\\.Rmarkdown$", "_files$", "_cache$"]
     weight = -120
     identifier = "R"
     url = "/categories/r"
-	
-[[menu.main]]        
-    name = "Teaching tales"
-    weight = -120
-    identifier = "story"
-    url = "/categories/story"
