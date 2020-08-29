@@ -1,0 +1,41 @@
+---
+title: "Using WORCS to create reproducible open science projects"
+author: "Caspar van Lissa"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+categories: ["R"]
+tags: ["R", "Open Science", "Reproducibility"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+I recently presented on *WORCS: A Workflow for Open Reproducible Code in Science* at [EARA 2020](https://www.fpce.up.pt/eara2020/home.html). This blog post was released in tandem with the conference presentation, to provide a starting point for interested users to find all relevant information.
+  
+
+## Presentation
+
+The conference presentation about WORCS is available [here on YouTube](https://www.youtube.com/watch?v=ysOxHYUWdFY). It very briefly explains the concepts behind a workflow for open science and the scope of the workflow and the accompanying R-package. The preprint paper detailing these methods is available [here]() [@vanlissaWORCSWorkflowOpen2020].
+
+If you need to install R before completing this tutorial,
+I recommend following [this tutorial](https://cjvanlissa.github.io/worcs/articles/setup.html).
+
+```{r, eval=TRUE, echo= FALSE}
+blogdown::shortcode("youtube", "ysOxHYUWdFY")
+```
+  
+
+## Tutorial
+
+In the span of a single cup of coffee, this tutorial demonstrates how to set up a new RStudio project using a `worcs` project template, and demonstrates all important features.
+
+```{r, eval=TRUE, echo= FALSE}
+blogdown::shortcode("youtube", "uzjpN_yFeUU")
+```
+  
+
+## More information
+
+WORCS is a conceptual workflow that can be used to guide open science projects in any computational environment. The `worcs` package implements all steps in the workflow in R / RStudio, effectively offering a 'one click solution' for R-users. The package has a [website](https://cjvanlissa.github.io/worcs/), which bundles all relevant information, including the following vignettes to help users get started:
+
+* [Setting up your computer for WORCS](https://cjvanlissa.github.io/worcs/articles/setup.html)
+* [The WORCS workflow](https://cjvanlissa.github.io/worcs/articles/workflow.html)

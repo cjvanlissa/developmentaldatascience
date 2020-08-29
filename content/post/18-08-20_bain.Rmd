@@ -1,0 +1,98 @@
+---
+title: "Evaluating informative hypotheses using bain"
+author: "Caspar van Lissa"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+categories: ["R"]
+tags: ["R", "Bayes", "SEM"]
+bibliography: [bibliography.bib]
+link-citations: true
+csl: apa.csl
+---
+
+I recently presented on *Evaluating informative hypotheses for parameters of a structural equation model using Bayes factors* at [EARA 2020](https://www.fpce.up.pt/eara2020/home.html). This blog post was released in tandem with the conference presentation, to provide a brief hands-on tutorial on how to conduct these analyses yourself.
+
+The YouTube video below demonstrates how to evaluate informative hypotheses using `bain`. If you want to follow along, you can find the full tutorial below. The open access paper detailing these methods is available [here](https://doi.org/10.1080/10705511.2020.1745644) [@vanlissaTeacherCornerEvaluating2020].
+
+If you need to install R before completing this tutorial,
+I recommend following [this tutorial](https://cjvanlissa.github.io/worcs/articles/setup.html).
+
+```{r, eval=TRUE, echo= FALSE}
+blogdown::shortcode("youtube", "o750l6UUZeE")
+```
+
+## Background
+
+A popular theory in psychology to explain social behavior is the Theory of Reasoned Action [TORA, @ajzen1980understanding]. TORA states that behavior is predicted by behavioral intention, which is in turn predicted by the attitude toward the behavior and the subjective norm about the behavior.
+
+## Data
+
+We examine a synthetic data set based on results found by @reineckeApplicationTheoryPlanned1996. The behavior under investigation is condom use by 16-24 year adolescents. The dependent variable ‘condom use’ is measured on a 5-point Likert-type scale (How often do you...), and the behavioral intention on a similar 5-point scale (In general do you intend to...). There are three attitude items about condom use (e.g., using a condom is awkward), three normative items (e.g., I think most of my friends would use...), all measured on a 5-point Likert-type scale.
+
+```{r, message = FALSE}
+library(foreign)
+df <- read.spss("toradata.sav", to.data.frame = TRUE, use.value.labels = FALSE)
+```
+
+## Specifying the model
+
+We have 3 indicators for attitude and norm, and observed variables for intention and behavior. We construct a measurement model for the latent variables attitude and norm.
+
+Then, we specify a model based on TORA, with attitude and norms both predicting behavorial intention and behavior.
+
+```{r, message = FALSE}
+library(lavaan)
+# Model syntax
+model <- 'attit =~ attit1 + attit2 + attit3
+          norm =~ norm1 + norm2 + norm3
+
+          intent ~ attit + norm 
+          behavior ~ intent + attit + norm'
+# Estimate the model
+fit <- sem(model, data = df)
+# Examine model fit
+fitmeasures(fit, fit.measures = c("npar", "chisq", "df", "rmsea", "cfi", "tli", "srmr"))
+```
+
+## Examine model results
+
+Let's plot the model results, so we get an idea of the parameter values.
+
+```{r}
+library(tidySEM)
+lo <- get_layout("",       "",       "",       "behavior", "",      "",      "",
+                 "",       "",       "",       "intent",   "",      "",      "", 
+                 "",       "attit",  "",       "",         "",      "norm",  "", 
+                 "attit1", "attit2", "attit3", "",         "norm1", "norm2", "norm3",
+                 rows = 4)
+graph_sem(fit, layout = lo, angle = 179)
+```
+
+Furthermore, let's see which parameters are available for `bain` to specify hypotheses about:
+
+```{r}
+library(bain)
+get_estimates(fit, standardize = TRUE)
+```
+
+## Specifying informative hypotheses
+
+The TORA model precludes direct paths between attitude and norm and actual
+behavior; the effect should be mediated totally by the behavioral intention.
+Let's specify two competing hypotheses: One representing the "strict" version
+of TORA, and one that also includes direct effects from attitudes and norms
+on behavior. We can refer to the `get_estimates()` parameters by name.
+
+```{r}
+bain(fit, "(behavior~intent, intent~attit, intent~norm) > 0 &
+           (behavior~attit, behavior~norm) = 0;
+           (behavior~intent, intent~attit, intent~norm) > 0 &
+           (behavior~attit, behavior~norm) > 0")
+```
+
+## Interpretation
+
+The Bayes factors in the column labeled `BF.u` indicate the ratio of support in favor of the hypothesis, relative to any ordering of parameter values (the unconstrained hypothesis, $H_u$). Note that both informative hypotheses, $H_1$ and $H_2$, receive more support than the unconstrained hypothesis.
+
+The Bayes factors in the column labeled `BF.c` indicate the ratio of support in favor of the hypothesis, relative to evidence not in favor of the hypothesis (the complement of the hypothesis, $H_c$). Note that both informative hypotheses receive more support than their respective complements; particularly for $H_2$ the support is overwhelming.
+
+Perhaps most interestingly, we can examine the column labeled `PMPb`, which contains posterior model probabilities. We can use these probabilities to determine which of a set of hypotheses receives the most support. The unconstrained hypothesis is included in the set as a fail-safe: In case all informative hypotheses are a poor fit for the data, the uninformed hypothesis will receive substantial support. In this case however, we see that $H_2$ is strongly preferred over $H_1$ and $H_u$. Thus, the data cast doubt on the tenet of TORA that there are no direct effects of attitudes and norms on behavior. 
