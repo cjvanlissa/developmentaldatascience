@@ -9,12 +9,13 @@ link-citations: true
 csl: apa.csl
 ---
 
-I recently presented on *WORCS: A Workflow for Open Reproducible Code in Science* at [EARA 2020](https://www.fpce.up.pt/eara2020/home.html). This blog post was released in tandem with the conference presentation, to provide a starting point for interested users to find all relevant information.
-  
+This blog post provides a starting point for learning about
+*WORCS: A Workflow for Open Reproducible Code in Science*. 
+Below, you will find all relevant information to get you started with writing reproducible open science papers.
 
 ## Presentation
 
-The conference presentation about WORCS is available [here on YouTube](https://www.youtube.com/watch?v=ysOxHYUWdFY). It very briefly explains the concepts behind a workflow for open science and the scope of the workflow and the accompanying R-package. The preprint paper detailing these methods is available [here]() [@vanlissaWORCSWorkflowOpen2020].
+A conference presentation about WORCS is available [here on YouTube](https://www.youtube.com/watch?v=ysOxHYUWdFY). It very briefly explains the concepts behind a workflow for open science and the scope of the workflow and the accompanying R-package. The preprint paper detailing these methods is available [here]() [@vanlissaWORCSWorkflowOpen2020].
 
 If you need to install R before completing this tutorial,
 I recommend following [this tutorial](https://cjvanlissa.github.io/worcs/articles/setup.html).
@@ -32,6 +33,12 @@ In the span of a single cup of coffee, this tutorial demonstrates how to set up 
 blogdown::shortcode("youtube", "uzjpN_yFeUU")
 ```
   
+## The "worcshop"
+
+My coauthors and I give invited lectures and workshops on `worcs`.
+All lecture slides and other course materials are available [here](http://cjvanlissa.github.io/worcshop).
+
+If you want to host a worcshop at your institution, please [contact dr. Caspar J. van Lissa](mailto:c.j.vanlissa@uu.nl).
 
 ## More information
 
