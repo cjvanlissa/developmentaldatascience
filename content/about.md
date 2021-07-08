@@ -13,6 +13,6 @@ My [NWO Veni-funded research](https://www.nwo.nl/onderzoek-en-resultaten/onderzo
 * Informative hypothesis evaluation
 * Meta-analysis
 
-I am a [prolicic R-package developer](https://cjvanlissa.github.io/resume/#software) and contribute to 6 packages on CRAN, and 2 on GitHub.
+I am a [prolific R-package developer](https://cjvanlissa.github.io/resume/#software) and contribute to 6 packages on CRAN, and 2 on GitHub.
 
 As Open Science Ambassador to my faculty, I am committed to the philosophy of [Open Science](https://osf.io). Scientific progress is a cooperative effort, and transparency will allow us to derive more reliable insights.
